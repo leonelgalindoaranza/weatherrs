@@ -1,5 +1,7 @@
 package com.weather.sample.client;
 
+import com.weather.sample.security.exception.WeatherSecurityException;
+import com.weather.sample.util.impl.CriptoHashImpl;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 import org.junit.Test;
@@ -8,7 +10,7 @@ public class CurrentWeatherTest {
 
 
     @Test
-    public void testRequest(){
+    public void testRequest() throws WeatherSecurityException {
         HttpRequest request = new HttpRequest();
         request.method("GET")
                 .protocol("https")
@@ -16,7 +18,7 @@ public class CurrentWeatherTest {
                 .path("/data/2.5/weather");
 
         request.query("id","4119617");
-        request.query("appid","b6907d289e10d714a6e88b30761fae22");
+        request.query("appid",new CriptoHashImpl().decodeHash());
 
         HttpResponse response = request.send();
 

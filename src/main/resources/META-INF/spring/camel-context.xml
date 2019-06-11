@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <!--jms configuration for this project -->
+    <bean id="jms" class="org.apache.camel.component.jms.JmsComponent">
+        <property name="connectionFactory">
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL" value="tcp://localhost:61616"/>
+            </bean>
+        </property>
+    </bean>
+
+    <bean id="weatherRequest" class="com.weather.sample.client.CurrentWeather"/>
+
+    <!-- camel context -->
+    <camelContext xmlns="http://camel.apache.org/schema/spring">
+        <!-- here is a sample which processes the input files
+             (leaving them in place - see the 'noop' flag)
+             then performs content based routing on the message using XPath -->
+
+        <dataFormats>
+            <json id="jack" library="Jackson" prettyPrint="true" />
+            <json id="unJack" library="Jackson" unmarshalTypeName="com.weather.sample.vo.Id"/>
+        </dataFormats>
+
+        <route id="inputMsgs">
+            <from uri="jms:queue:ActiveMQ.Advisory.Queue"/>
+            <log message="Resultado de la recepcion es:${body}"></log>
+            <multicast>
+                <to uri="direct:sendRq"/>
+            </multicast>
+        </route>
+        <route id="sendRequest">
+            <from uri="direct:sendRq"/>
+        <to uri="bean:weatherRequest?method=weatherRq"/>
+        <to uri="jms:queue:ActiveMQ.Advisory.Queue.hello"/>
+        <log message="Resultado de envio es:${body}"></log>
+    </route>
+</camelContext>
+</beans>
